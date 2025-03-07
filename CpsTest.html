@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPS Test</title>
+    <style>
+        .circle {
+            width: 500px;
+            height: 500px;
+            background-color: rgb(88, 88, 88);
+            border-radius: 50%;
+            position: relative;
+            margin-top: 20px;
+            pointer-events: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #b4b4b4;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        h1, h2, h3 {
+            margin: 10px;
+        }
+        button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .ripple {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(30, 255, 38, 1);
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes ripple-animation {
+            to {
+                transform: scale(15);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Clicks: <span id="clickValue">0</span></h1>
+    <h2>Time left: <span id="timerValue">5.00</span> seconds</h2>
+    <h3>CPS: <span id="cpsValue">0.00</span></h3>
+    <button id="startButton">Start Click</button>
+
+    <div class="circle"></div>
+    <script>
+        let clickValue = 0;
+        let timerValue = 5.0;
+        let timer;
+        let isTimerRunning = false;
+
+        function click_plus() {
+            clickValue++;
+            document.getElementById('clickValue').textContent = clickValue;
+        }
+
+        const circle = document.querySelector('.circle');
+
+        circle.addEventListener('click', function (e) {
+            if (!isTimerRunning) return;
+
+            click_plus();
+
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+
+            const rect = circle.getBoundingClientRect();
+            ripple.style.left = `${e.clientX - rect.left}px`;
+            ripple.style.top = `${e.clientY - rect.top}px`;
+
+            circle.appendChild(ripple);
+
+            ripple.addEventListener('animationend', () => {
+                ripple.remove();
+            });
+        });
+
+        function startTimer() {
+            const startButton = document.getElementById('startButton');
+            if (startButton) {
+                startButton.remove();
+            }
+
+            clearInterval(timer);
+
+            timerValue = 5.0;
+            clickValue = 0;
+            document.getElementById('clickValue').textContent = clickValue;
+            document.getElementById('timerValue').textContent = timerValue.toFixed(2);
+            document.getElementById('cpsValue').textContent = "0.00";
+
+            isTimerRunning = true;
+            circle.style.pointerEvents = "auto";
+
+            timer = setInterval(() => {
+                timerValue -= 0.01;
+                document.getElementById('timerValue').textContent = timerValue.toFixed(2);
+
+                if (timerValue <= 0) {
+                    clearInterval(timer);
+                    isTimerRunning = false;
+                    circle.style.pointerEvents = "none";
+                    document.getElementById('timerValue').textContent = "0.00";
+
+                    const cps = (clickValue / 5.0).toFixed(2);
+                    document.getElementById('cpsValue').textContent = cps;
+
+                    const newButton = document.createElement('button');
+                    newButton.id = 'startButton';
+                    newButton.textContent = 'Start Click';
+                    newButton.onclick = startTimer;
+                    document.body.appendChild(newButton);
+                }
+            }, 10);
+        }
+
+        document.getElementById('startButton').addEventListener('click', startTimer);
+    </script>
+</body>
+</html>
